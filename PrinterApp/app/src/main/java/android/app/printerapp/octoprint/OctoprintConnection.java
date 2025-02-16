@@ -12,6 +12,8 @@ import android.app.printerapp.devices.discovery.PrintNetworkManager;
 import android.app.printerapp.library.LibraryController;
 import android.app.printerapp.model.ModelPrinter;
 import android.app.printerapp.model.ModelProfile;
+import android.app.printerapp.octoprint.api.ConnectionService;
+import android.app.printerapp.octoprint.model.ConnectionResponse;
 import android.app.printerapp.settings.EditPrinterDialog;
 import android.app.printerapp.viewer.ViewerMainFragment;
 import android.content.Context;
@@ -30,12 +32,15 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.loopj.android.http.JsonHttpResponseHandler;
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory;
+import com.squareup.moshi.Moshi;
 
 import org.apache.http.Header;
 import org.apache.http.entity.StringEntity;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -45,6 +50,12 @@ import java.util.TimeZone;
 import de.tavendo.autobahn.WebSocketConnection;
 import de.tavendo.autobahn.WebSocketException;
 import de.tavendo.autobahn.WebSocketHandler;
+import kotlin.jvm.internal.Intrinsics;
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
+import retrofit2.Call;
+import retrofit2.Retrofit;
+import retrofit2.converter.moshi.MoshiConverterFactory;
 
 /**
  * Class for Connection handling with Octoprint's API. Since the API is still on developement
@@ -188,7 +199,7 @@ public class OctoprintConnection {
 	 * Obtains the current state of the machine and issues new connection commands
 	 * @param p printer
 	 */
-	public static void getNewConnection(final Context context, final ModelPrinter p){
+	public static void getNewConnection(final Context context, final ModelPrinter p, final String apikey){
 
         //Get progress dialog UI
         View configurePrinterDialogView = LayoutInflater.from(context).inflate(R.layout.dialog_progress_content_horizontal, null);
@@ -215,6 +226,31 @@ public class OctoprintConnection {
 //            e.printStackTrace();
 //        }
 
+        String baseUrl = "http://" + p.getAddress().replace("/", "");
+        HttpLoggingInterceptor logger = new HttpLoggingInterceptor();
+        logger.setLevel(HttpLoggingInterceptor.Level.BASIC);
+
+        OkHttpClient okClient = new OkHttpClient.Builder()
+                .addInterceptor(logger)
+                .build();
+
+        Moshi moshi = new Moshi.Builder()
+                .addLast(new KotlinJsonAdapterFactory())
+                .build();
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(baseUrl)
+                .addConverterFactory(MoshiConverterFactory.create(moshi))
+                .client(okClient)
+                .build();
+
+        ConnectionService connectionService = retrofit.create(ConnectionService.class);
+        Call<ConnectionResponse> call = connectionService.connection(apikey);
+        try {
+            ConnectionResponse body = call.execute().body();
+            System.out.println(body);
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
 
         //Get connection status
         HttpClientHandler.get(p.getAddress() + HttpUtils.URL_CONNECTION, null, new JsonHttpResponseHandler(){

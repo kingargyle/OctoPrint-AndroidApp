@@ -234,7 +234,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
                             }
                         } else {
 
-                            OctoprintConnection.getNewConnection(getActivity(), m);
+                            OctoprintConnection.getNewConnection(getActivity(), m, "");
 
 
                         }

@@ -138,7 +138,7 @@ public class OctoprintAuthentication {
                                 Log.i("CONNECTION", "Connection from: AUTH");
                                 OctoprintConnection.doConnection(context,p);
 
-                            } else OctoprintConnection.getNewConnection(context, p);
+                            } else OctoprintConnection.getNewConnection(context, p, "");
 
                         } catch (JSONException e) {
                             e.printStackTrace();

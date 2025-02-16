@@ -22,8 +22,13 @@
         android:theme="@style/AppBaseTheme.Green"
         android:largeHeap="true"
         android:vmSafeMode="true"
+        android:usesCleartextTraffic="true"
         android:allowClearUserData="true"
         android:hardwareAccelerated="true">
+
+        <uses-library
+            android:name="org.apache.http.legacy"
+            android:required="false" />
 
         <activity
             android:name="android.app.printerapp.SplashScreenActivity"

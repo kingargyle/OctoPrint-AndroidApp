@@ -18,6 +18,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -293,7 +294,6 @@ public class EditPrinterDialog {
         new MaterialAlertDialogBuilder(mContext)
                 .setTitle(R.string.settings_edit_name)
                 .setView(editPrinterDialogView)
-                .setMessage(R.string.viewer_file_size)
                 .setNeutralButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -392,7 +392,9 @@ public class EditPrinterDialog {
                         dialog.dismiss();
                     }
                 })
-                .show();
+                .show()
+                .getWindow().setLayout((int) (mContext.getResources().getDisplayMetrics().widthPixels * 0.9),
+                        ViewGroup.LayoutParams.WRAP_CONTENT);
 
 
     }

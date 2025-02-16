@@ -209,7 +209,7 @@ public class DiscoveryController {
                         if (p.getStatus() == StateUtils.STATE_NEW) {
 
 
-                            OctoprintConnection.getNewConnection(mContext, p);
+                            OctoprintConnection.getNewConnection(mContext, p, "");
 
 
                         } else if (p.getStatus() == StateUtils.STATE_ADHOC) {
@@ -250,7 +250,7 @@ public class DiscoveryController {
             public void onDismiss(DialogInterface dialogInterface) {
                 if (mFinalPrinter != null) {
 
-                    OctoprintConnection.getNewConnection(mContext, mFinalPrinter);
+                    OctoprintConnection.getNewConnection(mContext, mFinalPrinter, "");
                     mFinalPrinter = null;
                     mWaitProgressDialog = null;
                 }
@@ -390,7 +390,7 @@ public class DiscoveryController {
                         if (!DevicesListController.checkExisting(p.getAddress())) {
                             DevicesListController.addToList(p);
 
-                            OctoprintConnection.getNewConnection(mContext, p);
+                            OctoprintConnection.getNewConnection(mContext, p, et_key.getText().toString());
 
 
 //                            OctoprintConnection.getSettings(p);

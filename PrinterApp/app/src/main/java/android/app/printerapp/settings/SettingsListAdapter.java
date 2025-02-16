@@ -133,7 +133,7 @@ public class SettingsListAdapter extends ArrayAdapter<ModelPrinter> {
                         OctoprintConnection.disconnect(getContext(), m.getAddress());
                         connectionButton.setImageResource(R.drawable.ic_settings_disconnect);
                     } else {
-                        OctoprintConnection.getNewConnection(getContext(), m);
+                        OctoprintConnection.getNewConnection(getContext(), m, "");
                         connectionButton.setImageResource(R.drawable.ic_settings_connect);
                     }
 

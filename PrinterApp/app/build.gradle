@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("kotlin-android")
+    id("com.google.devtools.ksp").version("1.9.24-1.0.20")
 }
 
 android {
@@ -62,6 +63,7 @@ def computeVersionName() {
 }
 
 dependencies {
+    ksp 'com.squareup.moshi:moshi-kotlin-codegen:1.15.2'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.24'
     implementation files('libs/autobahn-0.5.0.jar')
     implementation files('libs/devsmartlib.jar')
@@ -77,7 +79,6 @@ dependencies {
     implementation "androidx.cardview:cardview:1.0.0"
     implementation "androidx.core:core:1.15.0"
     implementation "com.google.android.material:material:1.12.0"
-//    implementation 'com.github.navasmdc:MaterialDesign:1.5'
     implementation 'com.github.fengdai:alertdialogpro-theme-material:0.2.1'
     implementation project(':materialdesignlibrary')
     implementation 'com.afollestad.material-dialogs:core:3.3.0' //Material design dialogs
@@ -86,4 +87,11 @@ dependencies {
     implementation 'com.rengwuxian.materialedittext:library:1.8.2'
     implementation 'org.apache.httpcomponents:httpclient-android:4.3.5'
     implementation files('libs/android-async-http-1.4.6.jar')
+
+    // Retrofit
+    implementation 'com.squareup.retrofit2:retrofit:2.11.0'
+    implementation 'com.squareup.retrofit2:converter-moshi:2.11.0'
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.1")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 }
