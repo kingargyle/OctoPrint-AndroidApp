@@ -1,6 +1,5 @@
 package android.app.printerapp.devices.discovery;
 
-import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.printerapp.Log;
 import android.app.printerapp.MainActivity;
@@ -23,7 +22,10 @@ import android.widget.GridView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AlertDialog;
+
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
@@ -79,40 +81,29 @@ public class DiscoveryController {
 
             final Handler handler = new Handler();
 
-            //Build progress dialog
-            final MaterialDialog.Builder scanDelayDialogBuilder = new MaterialDialog.Builder(mContext);
-            scanDelayDialogBuilder.title(R.string.printview_searching_networks_dialog_title)
-                    .customView(scanDelayDialogView, true)
-                    .cancelable(true)
-                    .positiveColorRes(R.color.theme_accent_1)
-                    .positiveText(R.string.dialog_printer_manual_add)
-                    .negativeText(R.string.cancel)
-                    .callback(new MaterialDialog.ButtonCallback() {
+            final MaterialAlertDialogBuilder printerDialogBuilder = new MaterialAlertDialogBuilder(mContext);
 
-
+            final AlertDialog scanDelayDialog = printerDialogBuilder.setView(scanDelayDialogView)
+                    .setCancelable(true)
+                    .setTitle(R.string.printview_searching_networks_dialog_title)
+                    .setPositiveButton(R.string.dialog_printer_manual_add, new DialogInterface.OnClickListener() {
                         @Override
-                        public void onPositive(MaterialDialog dialog) {
-                            super.onPositive(dialog);
-
-
+                        public void onClick(DialogInterface dialog, int i) {
                             optionAddPrinter();
-                            dialog.setOnDismissListener(null);
                             dialog.dismiss();
-
-                        }
-
-                        @Override
-                        public void onNegative(MaterialDialog dialog) {
-                            super.onNegative(dialog);
-
-                            dialog.setOnDismissListener(null);
-                            dialog.dismiss();
-
                         }
                     })
-                    .autoDismiss(false);
+                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.dismiss();
+                                }
+                            }
+                    )
+                    .create();
 
-            scanDelayDialogBuilder.dismissListener(new DialogInterface.OnDismissListener() {
+
+            scanDelayDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
                 @Override
                 public void onDismiss(DialogInterface dialog) {
                     scanNetwork();
@@ -120,10 +111,7 @@ public class DiscoveryController {
             });
 
             //Show dialog
-            final Dialog scanDelayDialog = scanDelayDialogBuilder.build();
             scanDelayDialog.show();
-
-
 
             handler.postDelayed(new Runnable() {
                 @Override
@@ -163,27 +151,28 @@ public class DiscoveryController {
 
         }
 
-        MaterialDialog.Builder adb;
+        MaterialAlertDialogBuilder adb;
         final Dialog dialog;
 
-        adb = new MaterialDialog.Builder(mContext)
-                .title(R.string.printview_searching_networks_dialog_title)
-                .customView(discoveryPrintersDialogView, false)
-                .positiveText(R.string.dialog_printer_manual_add)
-                .positiveColorRes(R.color.theme_accent_1)
-                .negativeText(R.string.cancel)
-                .negativeColorRes(R.color.body_text_2)
-                .callback(new MaterialDialog.ButtonCallback() {
+        adb = new MaterialAlertDialogBuilder(mContext)
+                .setTitle(R.string.printview_searching_networks_dialog_title)
+                .setView(discoveryPrintersDialogView)
+                .setPositiveButton(R.string.dialog_printer_manual_add, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int i) {
+                                optionAddPrinter();
+                                dialog.dismiss();
+                            }
+                        }
+                )
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onPositive(MaterialDialog dialog) {
-                        //scanDelayDialog();
-                        optionAddPrinter();
-                        dialog.setOnDismissListener(null);
+                    public void onClick(DialogInterface dialog, int i) {
                         dialog.dismiss();
                     }
                 });
 
-        dialog = adb.build();
+        dialog = adb.create();
 
         if (mServiceList.size()==0){
             discoveryPrintersDialogView.setOnClickListener(new View.OnClickListener() {
@@ -248,14 +237,14 @@ public class DiscoveryController {
         ((TextView) waitingForServiceDialogView.findViewById(R.id.progress_dialog_text)).setText(R.string.devices_configure_waiting);
 
         //Show progress dialog
-        final MaterialDialog.Builder configurePrinterDialogBuilder = new MaterialDialog.Builder(mContext);
-        configurePrinterDialogBuilder.title(R.string.devices_configure_wifi_title)
-                .customView(waitingForServiceDialogView, true)
-                .cancelable(false)
-                .autoDismiss(false);
+        final MaterialAlertDialogBuilder configurePrinterDialogBuilder = new MaterialAlertDialogBuilder(mContext);
+
+        configurePrinterDialogBuilder.setTitle(R.string.devices_configure_wifi_title)
+                .setView(waitingForServiceDialogView)
+                .setCancelable(false);
 
         //Progress dialog to notify command events
-        mWaitProgressDialog = configurePrinterDialogBuilder.build();
+        mWaitProgressDialog = configurePrinterDialogBuilder.create();
         mWaitProgressDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialogInterface) {
@@ -264,8 +253,6 @@ public class DiscoveryController {
                     OctoprintConnection.getNewConnection(mContext, mFinalPrinter);
                     mFinalPrinter = null;
                     mWaitProgressDialog = null;
-
-
                 }
 
             }
@@ -292,21 +279,24 @@ public class DiscoveryController {
 
     private void errorDialog() {
 
-        new MaterialDialog.Builder(mContext)
-                .title(R.string.error)
-                .content(R.string.devices_configure_wifi_error)
-                .positiveText(R.string.retry)
-                .positiveColorRes(R.color.theme_accent_1)
-                .negativeText(R.string.cancel)
-                .negativeColorRes(R.color.body_text_2)
-                .callback(new MaterialDialog.ButtonCallback() {
+        new MaterialAlertDialogBuilder(mContext)
+                .setTitle(R.string.error)
+                .setMessage(R.string.devices_configure_wifi_error)
+                .setPositiveButton(R.string.retry, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                scanDelayDialog();
+                                dialogInterface.dismiss();
+                            }
+                        }
+                )
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onPositive(MaterialDialog dialog) {
-                        scanDelayDialog();
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
                     }
                 })
                 .show();
-
     }
 
     public boolean checkExisting(ModelPrinter m) {
@@ -373,19 +363,18 @@ public class DiscoveryController {
         final EditText et_port = (EditText) v.findViewById(R.id.et_port);
         final EditText et_key = (EditText) v.findViewById(R.id.et_apikey);
 
-        new MaterialDialog.Builder(mContext)
-                .title(R.string.settings_add_title)
-                .customView(v, false)
-                .positiveText(R.string.add)
-                .positiveColorRes(R.color.theme_accent_1)
-                .negativeText(R.string.cancel)
-                .negativeColorRes(R.color.body_text_2)
-                .autoDismiss(false)
-                .callback(new MaterialDialog.ButtonCallback() {
-
+        new MaterialAlertDialogBuilder(mContext)
+                .setTitle(R.string.settings_add_title)
+                .setView(v)
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onPositive(MaterialDialog dialog) {
-
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                })
+                .setPositiveButton(R.string.add, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int i) {
                         if (et_address.getText().toString().equals("")) {
                             et_address.setError(mContext.getString(R.string.manual_add_error_address));
                             return;
@@ -429,16 +418,10 @@ public class DiscoveryController {
                         }
 
                         dialog.dismiss();
-                    }
 
-                    @Override
-                    public void onNegative(MaterialDialog dialog) {
-                        super.onNegative(dialog);
-                        dialog.dismiss();
                     }
                 })
                 .show();
-
 
     }
 

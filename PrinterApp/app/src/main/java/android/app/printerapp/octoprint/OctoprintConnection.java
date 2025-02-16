@@ -15,17 +15,20 @@ import android.app.printerapp.model.ModelProfile;
 import android.app.printerapp.settings.EditPrinterDialog;
 import android.app.printerapp.viewer.ViewerMainFragment;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.apache.http.Header;
@@ -194,24 +197,19 @@ public class OctoprintConnection {
 
 //        try{
             //Show progress dialog
-            final MaterialDialog.Builder configurePrinterDialogBuilder = new MaterialDialog.Builder(context);
-            configurePrinterDialogBuilder.title(R.string.devices_discovery_title)
-                    .customView(configurePrinterDialogView, true)
-                    .cancelable(true)
-                    .negativeText(R.string.cancel)
-                    .callback(new MaterialDialog.ButtonCallback() {
+            final MaterialAlertDialogBuilder configurePrinterDialogBuilder = new MaterialAlertDialogBuilder(context)
+                    .setTitle(R.string.devices_discovery_title)
+                    .setView(configurePrinterDialogView)
+                    .setCancelable(true)
+                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                         @Override
-                        public void onNegative(MaterialDialog dialog) {
-                            super.onNegative(dialog);
-                            dialog.setOnDismissListener(null);
-                            dialog.dismiss();
-
-
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
                         }
-                    })
-                    .autoDismiss(false);
+                    });
+
             //Progress dialog to notify command events
-            final Dialog progressDialog = configurePrinterDialogBuilder.build();
+            final Dialog progressDialog = configurePrinterDialogBuilder.create();
             progressDialog.show();
 //        } catch (WindowManager.BadTokenException e){
 //            e.printStackTrace();
@@ -314,20 +312,23 @@ public class OctoprintConnection {
 
     public static void showApiDisabledDialog(final Context context){
 
-        new MaterialDialog.Builder(context)
-                .title(R.string.error)
-                .content(R.string.connection_error_api_disabled)
-                .positiveText(R.string.ok)
-                .negativeText(R.string.cancel)
-                .callback(new MaterialDialog.ButtonCallback() {
+        new MaterialAlertDialogBuilder(context)
+                .setTitle(R.string.error)
+                .setMessage(R.string.connection_error_api_disabled)
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onPositive(MaterialDialog dialog) {
-                        super.onPositive(dialog);
+                    public void onClick(DialogInterface dialogInterface, int i) {
                         new DiscoveryController(context).optionAddPrinter();
+                        dialogInterface.dismiss();
                     }
-                }).show();
-
-
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                })
+                .show();
     }
 
     private static void convertType(ModelPrinter p, String type){

@@ -16,7 +16,6 @@ import android.app.printerapp.octoprint.OctoprintProfiles;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -28,7 +27,10 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Spinner;
 
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -288,35 +290,29 @@ public class EditPrinterDialog {
         View editPrinterDialogView = inflater.inflate(R.layout.dialog_edit_printer_info, null);
         initElements(editPrinterDialogView);
 
-        MaterialDialog.Builder dialogBuilder = new MaterialDialog.Builder(mContext)
-                .title(R.string.settings_edit_name)
-                .customView(editPrinterDialogView, false)
-                .neutralText(R.string.cancel)
-                .neutralColorRes(R.color.body_text_2)
-                .negativeText(R.string.settings_change_network)
-                .negativeColorRes(R.color.body_text_2)
-                .positiveText(R.string.ok)
-                .positiveColorRes(R.color.theme_accent_1)
-                .cancelable(false)
-                .callback(new MaterialDialog.ButtonCallback() {
-
+        new MaterialAlertDialogBuilder(mContext)
+                .setTitle(R.string.settings_edit_name)
+                .setView(editPrinterDialogView)
+                .setMessage(R.string.viewer_file_size)
+                .setNeutralButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onNeutral(MaterialDialog dialog) {
-                        super.onNeutral(dialog);
-
-
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Respond to neutral button press
                         dialog.dismiss();
-
                     }
-
+                })
+                .setNegativeButton(R.string.settings_change_network, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onNegative(MaterialDialog dialog) {
-
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Respond to negative button press
                         new DiscoveryController(mContext).changePrinterNetwork(mPrinter);
                         dialog.dismiss();
                     }
+                })
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onPositive(MaterialDialog dialog) {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Respond to positive button press
                         String newName = editText_name.getText().toString();
                         String newColor = null;
 
@@ -395,22 +391,8 @@ public class EditPrinterDialog {
                         notifyAdapters();
                         dialog.dismiss();
                     }
-                });
-
-        Dialog dialog = dialogBuilder.build();
-        dialog.show();
-
-//        Window window = dialog.getWindow();
-//
-//        //TODO RANDOM CRASH
-//        try {
-//
-//            window.setLayout(500, LinearLayout.LayoutParams.MATCH_PARENT);
-//
-//        } catch (ArrayIndexOutOfBoundsException e) {
-//
-//            e.printStackTrace();
-//        }
+                })
+                .show();
 
 
     }

@@ -12,7 +12,6 @@ import android.app.printerapp.library.LibraryController;
 import android.app.printerapp.model.ModelProfile;
 import android.app.printerapp.octoprint.OctoprintConnection;
 import android.app.printerapp.octoprint.StateUtils;
-import android.app.printerapp.util.ui.CustomEditableSlider;
 import android.app.printerapp.util.ui.CustomPopupWindow;
 import android.app.printerapp.util.ui.ListIconPopupWindowAdapter;
 import android.app.printerapp.viewer.sidepanel.SidePanelHandler;
@@ -32,7 +31,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.v4.content.LocalBroadcastManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Gravity;
@@ -61,8 +59,14 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.devsmart.android.ui.HorizontalListView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.slider.Slider;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -134,7 +138,7 @@ public class ViewerMainFragment extends Fragment {
     private static FrameLayout mBottomBar;
     private static LinearLayout mRotationLayout;
     private static LinearLayout mScaleLayout;
-    private static CustomEditableSlider mRotationSlider;
+    private static Slider mRotationSlider;
     private static ImageView mActionImage;
 
     private static EditText mScaleEditX;
@@ -197,7 +201,7 @@ public class ViewerMainFragment extends Fragment {
 
 
             //Register receiver
-            mContext.registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+            ContextCompat.registerReceiver(mContext, onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), ContextCompat.RECEIVER_NOT_EXPORTED);
 
             initUIElements();
 
@@ -220,7 +224,7 @@ public class ViewerMainFragment extends Fragment {
                     Rect r = new Rect();
                     mRootView.getWindowVisibleDisplayFrame(r);
 
-                    if (mSurface.getEditionMode() == ViewerSurfaceView.SCALED_EDITION_MODE){
+                    if (mSurface.getEditionMode() == ViewerSurfaceView.SCALED_EDITION_MODE) {
 
                         int[] location = new int[2];
                         int heightDiff = mRootView.getRootView().getHeight() - (r.bottom - r.top);
@@ -231,19 +235,14 @@ public class ViewerMainFragment extends Fragment {
                                 isKeyboardShown = true;
                                 mActionModePopupWindow.getContentView().getLocationInWindow(location);
 
-                                if (Build.VERSION.SDK_INT >= 19)
-                                    mActionModePopupWindow.update(location[0], location[1] - MENU_HIDE_OFFSET_SMALL);
-                                else  mActionModePopupWindow.update(location[0], location[1] + MENU_HIDE_OFFSET_BIG);
+                                mActionModePopupWindow.update(location[0], location[1] - MENU_HIDE_OFFSET_SMALL);
                             }
                         } else {
                             if (isKeyboardShown) {
                                 isKeyboardShown = false;
                                 mActionModePopupWindow.getContentView().getLocationInWindow(location);
 
-                                if (Build.VERSION.SDK_INT >= 19)
-                                    mActionModePopupWindow.update(location[0], location[1] + MENU_HIDE_OFFSET_SMALL);
-                                else  mActionModePopupWindow.update(location[0], location[1] - MENU_HIDE_OFFSET_BIG);
-
+                                mActionModePopupWindow.update(location[0], location[1] + MENU_HIDE_OFFSET_SMALL);
                             }
 
                         }
@@ -270,8 +269,7 @@ public class ViewerMainFragment extends Fragment {
             mFile = new File(mSlicingHandler.getLastReference());
 
         } catch (Exception e) {
-
-            e.printStackTrace();
+            android.util.Log.e(ViewerMainFragment.class.getSimpleName(), "Error: " + e.getMessage(), e);
 
         }
 
@@ -304,8 +302,7 @@ public class ViewerMainFragment extends Fragment {
 
         //Set elements to handle the model
         mSeekBar = (SeekBar) mRootView.findViewById(R.id.barLayer);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN)
-            mSeekBar.getThumb().mutate().setAlpha(0);
+        mSeekBar.getThumb().mutate().setAlpha(0);
         mSeekBar.setVisibility(View.INVISIBLE);
 
         //Undo button bar
@@ -350,16 +347,16 @@ public class ViewerMainFragment extends Fragment {
         mActionImage = (ImageView) mRootView.findViewById(R.id.print_panel_bar_action_image);
 
 
-        mRotationSlider = (CustomEditableSlider) mRootView.findViewById(R.id.print_panel_slider);
+        mRotationSlider = (Slider) mRootView.findViewById(R.id.print_panel_slider);
         mRotationSlider.setValue(12);
-        mRotationSlider.setShownValue(0);
-        mRotationSlider.setMax(24);
-        mRotationSlider.setShowNumberIndicator(true);
+//        mRotationSlider.setShownValue(0);
+//        mRotationSlider.setMax(24);
+//        mRotationSlider.setShowNumberIndicator(true);
         mRotationSlider.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
 
-                switch (motionEvent.getAction()){
+                switch (motionEvent.getAction()) {
 
                     case MotionEvent.ACTION_DOWN:
 
@@ -378,18 +375,14 @@ public class ViewerMainFragment extends Fragment {
                 return false;
             }
         });
-        mRotationSlider.setOnValueChangedListener(new CustomEditableSlider.OnValueChangedListener() {
-
+        mRotationSlider.addOnChangeListener(new Slider.OnChangeListener() {
             boolean lock = false;
 
-
             @Override
-            public void onValueChanged(int i) {
-
+            public void onValueChange(@NonNull Slider slider, float value, boolean fromUser) {
                 //Calculation on a 12 point seekbar
-                float newAngle = (i - 12) * POSITIVE_ANGLE;
-
-                mRotationSlider.setShownValue((int)newAngle);
+                float newAngle = (value - 12) * POSITIVE_ANGLE;
+                mRotationSlider.setValue(newAngle);
 
                 try {
 
@@ -421,14 +414,12 @@ public class ViewerMainFragment extends Fragment {
 
                     e.printStackTrace();
                 }
-
-
             }
         });
 
         mStatusBottomBar = (LinearLayout) mRootView.findViewById(R.id.model_status_bottom_bar);
         mRotationLayout = (LinearLayout) mRootView.findViewById(R.id.model_button_rotate_bar_linearlayout);
-        mScaleLayout  = (LinearLayout) mRootView.findViewById(R.id.model_button_scale_bar_linearlayout);
+        mScaleLayout = (LinearLayout) mRootView.findViewById(R.id.model_button_scale_bar_linearlayout);
 
         mTextWatcherX = new ScaleChangeListener(0);
         mTextWatcherY = new ScaleChangeListener(1);
@@ -442,7 +433,7 @@ public class ViewerMainFragment extends Fragment {
             @Override
             public void onClick(View view) {
 
-                if (mUniformScale.isSelected()){
+                if (mUniformScale.isSelected()) {
                     mUniformScale.setSelected(false);
                 } else {
                     mUniformScale.setSelected(true);
@@ -531,35 +522,27 @@ public class ViewerMainFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(android.view.MenuItem item) {
 
-        switch (item.getItemId()) {
+        int itemId = item.getItemId();
+        if (itemId == R.id.viewer_open) {
+            FileBrowser.openFileBrowser(getActivity(), FileBrowser.VIEWER, getString(R.string.choose_file), ".stl", ".gcode");
+            return true;
+        } else if (itemId == R.id.viewer_save) {
+            saveNewProject();
+            return true;
+        } else if (itemId == R.id.viewer_restore) {
+            optionRestoreView();
+            return true;
+        } else if (itemId == R.id.viewer_clean) {
+            optionClean();
 
-            case R.id.viewer_open:
-                FileBrowser.openFileBrowser(getActivity(), FileBrowser.VIEWER, getString(R.string.choose_file), ".stl", ".gcode");
-                return true;
-
-            case R.id.viewer_save:
-                saveNewProject();
-                return true;
-
-            case R.id.viewer_restore:
-                optionRestoreView();
-                return true;
-
-            case R.id.viewer_clean:
-
-                optionClean();
-
-                return true;
-
-            case R.id.library_settings:
-                hideActionModePopUpWindow();
-                hideCurrentActionPopUpWindow();
-                MainActivity.showExtraFragment(0, 0);
-                return true;
-
-            default:
-                return super.onOptionsItemSelected(item);
+            return true;
+        } else if (itemId == R.id.library_settings) {
+            hideActionModePopUpWindow();
+            hideCurrentActionPopUpWindow();
+            MainActivity.showExtraFragment(0, 0);
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
 
@@ -594,14 +577,14 @@ public class ViewerMainFragment extends Fragment {
 
         mDataList.clear();
         mFile = null;
-        
-        if (mSlicingHandler!=null){
+
+        if (mSlicingHandler != null) {
 
             mSlicingHandler.setOriginalProject(null);
             mSlicingHandler.setLastReference(null);
             mSeekBar.setVisibility(View.INVISIBLE);
             mSurface.requestRender();
-            showProgressBar(0,0);
+            showProgressBar(0, 0);
         }
 
 
@@ -617,51 +600,55 @@ public class ViewerMainFragment extends Fragment {
         if (LibraryController.hasExtension(0, filePath)) {
 
             if (!StlFile.checkFileSize(new File(filePath), mContext)) {
-                new MaterialDialog.Builder(mContext)
-                        .title(R.string.warning)
-                        .content(R.string.viewer_file_size)
-                        .negativeText(R.string.cancel)
-                        .negativeColorRes(R.color.body_text_2)
-                        .positiveText(R.string.ok)
-                        .positiveColorRes(R.color.theme_accent_1)
-                        .callback(new MaterialDialog.ButtonCallback() {
-                            @Override
-                            public void onPositive(MaterialDialog dialog) {
-                                openFile(filePath);
 
+                new MaterialAlertDialogBuilder(mContext)
+                        .setTitle(R.string.warning)
+                        .setMessage(R.string.viewer_file_size)
+                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // Respond to negative button press
+                                dialog.dismiss();
                             }
                         })
-                        .build()
+                        .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // Respond to positive button press
+                                openFile(filePath);
+                                dialog.dismiss();
+                            }
+                        })
                         .show();
-
             } else {
                 openFile(filePath);
             }
         } else if (LibraryController.hasExtension(1, filePath)) {
-
-            new MaterialDialog.Builder(mContext)
-                    .title(R.string.warning)
-                    .content(R.string.viewer_open_gcode_dialog)
-                    .negativeText(R.string.cancel)
-                    .negativeColorRes(R.color.body_text_2)
-                    .positiveText(R.string.ok)
-                    .positiveColorRes(R.color.theme_accent_1)
-                    .callback(new MaterialDialog.ButtonCallback() {
+            new MaterialAlertDialogBuilder(mContext)
+                    .setTitle(R.string.warning)
+                    .setMessage(R.string.viewer_open_gcode_dialog)
+                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                         @Override
-                        public void onPositive(MaterialDialog dialog) {
-                            openFile(filePath);
+                        public void onClick(DialogInterface dialog, int which) {
+                            // Respond to negative button press
+                            dialog.dismiss();
                         }
                     })
-                    .build()
+                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // Respond to positive button press
+                            openFile(filePath);
+                            dialog.dismiss();
+                        }
+                    })
                     .show();
         }
-
-
     }
 
 
     //Select the last object added
-    public static void doPress(){
+    public static void doPress() {
 
         mSurface.doPress(mDataList.size() - 1);
 
@@ -698,18 +685,15 @@ public class ViewerMainFragment extends Fragment {
         mDataList.add(data);
 
 
-
         //Adding original project //TODO elsewhere?
         if (mSlicingHandler != null)
-            if (mSlicingHandler.getOriginalProject() == null){
+            if (mSlicingHandler.getOriginalProject() == null) {
                 mSlicingHandler.setOriginalProject(mFile.getParentFile().getParent());
             } else {
-                if (!mFile.getAbsolutePath().contains("/temp")){
+                if (!mFile.getAbsolutePath().contains("/temp")) {
                     mSlicingHandler.setOriginalProject(mFile.getParentFile().getParent());
                 }
             }
-
-
 
 
     }
@@ -868,74 +852,68 @@ public class ViewerMainFragment extends Fragment {
         else
             dialogTitle = getString(R.string.save);
 
-        final MaterialDialog.Builder createFolderDialog = new MaterialDialog.Builder(getActivity());
-        createFolderDialog.title(dialogTitle)
-                .customView(createProjectDialog, true)
-                .positiveColorRes(R.color.theme_accent_1)
-                .positiveText(R.string.save)
-                .negativeColorRes(R.color.body_text_2)
-                .negativeText(R.string.discard)
-                .autoDismiss(false)
-                .callback(new MaterialDialog.ButtonCallback() {
+        new MaterialAlertDialogBuilder(mContext).setTitle(dialogTitle)
+                .setView(createProjectDialog)
+                .setNegativeButton(R.string.discard, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onPositive(MaterialDialog dialog) {
-
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Respond to negative button press
+                        dialog.dismiss();
+                    }
+                })
+                .setPositiveButton(R.string.save, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Respond to positive button press
                         int selected = radioGroup.getCheckedRadioButtonId();
 
-                        switch (selected) {
-
-                            case R.id.save_model_stl_checkbox:
-
-                                if (mFile != null) {
-                                    if (LibraryController.hasExtension(0, mFile.getName())) {
-                                        if (StlFile.checkIfNameExists(proyectNameText.getText().toString()))
-                                            proyectNameText.setError(mContext.getString(R.string.proyect_name_not_available));
+                        if (selected == R.id.save_model_stl_checkbox) {
+                            if (mFile != null) {
+                                if (LibraryController.hasExtension(0, mFile.getName())) {
+                                    if (StlFile.checkIfNameExists(proyectNameText.getText().toString()))
+                                        proyectNameText.setError(mContext.getString(R.string.proyect_name_not_available));
+                                    else {
+                                        if (StlFile.saveModel(mDataList, proyectNameText.getText().toString(), null))
+                                            dialog.dismiss();
                                         else {
-                                            if (StlFile.saveModel(mDataList, proyectNameText.getText().toString(), null))
-                                                dialog.dismiss();
-                                            else {
-                                                Toast.makeText(mContext, R.string.error_saving_invalid_model, Toast.LENGTH_SHORT).show();
-                                                dialog.dismiss();
-                                            }
+                                            Toast.makeText(mContext, R.string.error_saving_invalid_model, Toast.LENGTH_SHORT).show();
+                                            dialog.dismiss();
                                         }
-                                    } else {
-                                        Toast.makeText(mContext, R.string.devices_toast_no_stl, Toast.LENGTH_SHORT).show();
-                                        dialog.dismiss();
                                     }
                                 } else {
-
-                                    Toast.makeText(mContext, R.string.error_saving_invalid_model, Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(mContext, R.string.devices_toast_no_stl, Toast.LENGTH_SHORT).show();
                                     dialog.dismiss();
                                 }
+                            } else {
 
-                                break;
+                                Toast.makeText(mContext, R.string.error_saving_invalid_model, Toast.LENGTH_SHORT).show();
+                                dialog.dismiss();
+                            }
+                        } else if (selected == R.id.save_model_gcode_checkbox) {
+                            final File fileFrom = new File(LibraryController.getParentFolder() + "/temp/temp.gco");
 
-                            case R.id.save_model_gcode_checkbox:
 
-                                final File fileFrom = new File(LibraryController.getParentFolder() + "/temp/temp.gco");
+                            //if there is a temporary sliced gcode
+                            if (fileFrom.exists()) {
 
+                                //Get original project
+                                final File actualFile = new File(mSlicingHandler.getOriginalProject());
 
-                                //if there is a temporary sliced gcode
-                                if (fileFrom.exists()) {
+                                //Save gcode
+                                File fileTo = new File(actualFile + "/_gcode/" + proyectNameText.getText().toString().replace(" ", "_") + ".gcode");
 
-                                    //Get original project
-                                    final File actualFile = new File(mSlicingHandler.getOriginalProject());
+                                //Delete file if success
+                                try {
+                                    fileCopy(fileFrom, fileTo);
 
-                                    //Save gcode
-                                    File fileTo = new File(actualFile + "/_gcode/" + proyectNameText.getText().toString().replace(" ", "_") + ".gcode");
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
 
-                                    //Delete file if success
-                                    try {
-                                        fileCopy(fileFrom,fileTo);
+                                if (mFile.getName().equals(fileFrom.getName()))
+                                    openFile(fileTo.getAbsolutePath());
 
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-
-                                    if (mFile.getName().equals(fileFrom.getName()))
-                                        openFile(fileTo.getAbsolutePath());
-
-                                    //if (fileFrom.delete()) {}
+                                //if (fileFrom.delete()) {}
 
 
                                 /**
@@ -945,41 +923,21 @@ public class ViewerMainFragment extends Fragment {
                                 intent.putExtra("message", "Files");
                                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
 
-                        }else{
-                            Toast.makeText(getActivity(), R.string.viewer_slice_wait, Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(getActivity(), R.string.viewer_slice_wait, Toast.LENGTH_SHORT).show();
+                            }
+
+                            dialog.dismiss();
+                        } else if (selected == R.id.save_model_overwrite_checkbox) {
+                            Toast.makeText(getActivity(), R.string.option_unavailable, Toast.LENGTH_SHORT).show();
+
+                            dialog.dismiss();
+                        } else {
+                            dialog.dismiss();
                         }
-
-                        dialog.dismiss();
-
-                        break;
-
-                        case R.id.save_model_overwrite_checkbox:
-
-                        Toast.makeText(getActivity(), R.string.option_unavailable, Toast.LENGTH_SHORT).show();
-
-                        dialog.dismiss();
-
-                        break;
-
-                        default:
-
-                        dialog.dismiss();
-
-                        break;
-
                     }
-
-                }
-
-        @Override
-                    public void onNegative(MaterialDialog dialog) {
-                        dialog.cancel();
-                        dialog.dismiss();
-                    }
-
                 })
                 .show();
-
     }
 
     //Copy a file to another location
@@ -1107,10 +1065,10 @@ public class ViewerMainFragment extends Fragment {
     }
 
     public static void hideSoftKeyboard() {
-        try{
-            InputMethodManager inputMethodManager = (InputMethodManager)  mContext.getSystemService(Activity.INPUT_METHOD_SERVICE);
-            inputMethodManager.hideSoftInputFromWindow(((Activity)mContext).getCurrentFocus().getWindowToken(), 0);
-        } catch (NullPointerException e){
+        try {
+            InputMethodManager inputMethodManager = (InputMethodManager) mContext.getSystemService(Activity.INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(((Activity) mContext).getCurrentFocus().getWindowToken(), 0);
+        } catch (NullPointerException e) {
 
         }
 
@@ -1132,56 +1090,50 @@ public class ViewerMainFragment extends Fragment {
 
         selectActionButton(item.getId());
 
-        switch (item.getId()) {
-            case R.id.move_item_button:
+        int id = item.getId();
+        if (id == R.id.move_item_button) {
+            hideCurrentActionPopUpWindow();
+            mSurface.setEditionMode(ViewerSurfaceView.MOVE_EDITION_MODE);
+        } else if (id == R.id.rotate_item_button) {
+            if (mCurrentActionPopupWindow == null) {
+                final String[] actionButtonsValues = mContext.getResources().getStringArray(R.array.rotate_model_values);
+                final TypedArray actionButtonsIcons = mContext.getResources().obtainTypedArray(R.array.rotate_model_icons);
+                showHorizontalMenuPopUpWindow(item, actionButtonsValues, actionButtonsIcons,
+                        null, new AdapterView.OnItemClickListener() {
+                            @Override
+                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                changeCurrentAxis(Integer.parseInt(actionButtonsValues[position]));
+                                mBottomBar.setVisibility(View.VISIBLE);
+                                mRotationLayout.setVisibility(View.VISIBLE);
+                                mSurface.setEditionMode(ViewerSurfaceView.ROTATION_EDITION_MODE);
+                                hideCurrentActionPopUpWindow();
+                                item.setImageResource(actionButtonsIcons.getResourceId(position, -1));
+                                mActionImage.setImageDrawable(mContext.getResources().getDrawable(actionButtonsIcons.getResourceId(position, -1)));
+                            }
+                        });
+            } else {
                 hideCurrentActionPopUpWindow();
-                mSurface.setEditionMode(ViewerSurfaceView.MOVE_EDITION_MODE);
-                break;
-            case R.id.rotate_item_button:
-
-                if (mCurrentActionPopupWindow == null) {
-                    final String[] actionButtonsValues = mContext.getResources().getStringArray(R.array.rotate_model_values);
-                    final TypedArray actionButtonsIcons = mContext.getResources().obtainTypedArray(R.array.rotate_model_icons);
-                    showHorizontalMenuPopUpWindow(item, actionButtonsValues, actionButtonsIcons,
-                            null, new AdapterView.OnItemClickListener() {
-                                @Override
-                                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                                    changeCurrentAxis(Integer.parseInt(actionButtonsValues[position]));
-                                    mBottomBar.setVisibility(View.VISIBLE);
-                                    mRotationLayout.setVisibility(View.VISIBLE);
-                                    mSurface.setEditionMode(ViewerSurfaceView.ROTATION_EDITION_MODE);
-                                    hideCurrentActionPopUpWindow();
-                                    item.setImageResource(actionButtonsIcons.getResourceId(position, -1));
-                                    mActionImage.setImageDrawable(mContext.getResources().getDrawable(actionButtonsIcons.getResourceId(position, -1)));
-                                }
-                            });
-                } else {
-                    hideCurrentActionPopUpWindow();
-                }
-                break;
-            case R.id.scale_item_button:
-                hideCurrentActionPopUpWindow();
-                mBottomBar.setVisibility(View.VISIBLE);
-                mScaleLayout.setVisibility(View.VISIBLE);
-                mSurface.setEditionMode(ViewerSurfaceView.SCALED_EDITION_MODE);
-                mActionImage.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_action_scale));
-                displayModelSize(mSurface.getObjectPresed());
-                break;
+            }
+        } else if (id == R.id.scale_item_button) {
+            hideCurrentActionPopUpWindow();
+            mBottomBar.setVisibility(View.VISIBLE);
+            mScaleLayout.setVisibility(View.VISIBLE);
+            mSurface.setEditionMode(ViewerSurfaceView.SCALED_EDITION_MODE);
+            mActionImage.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_action_scale));
+            displayModelSize(mSurface.getObjectPresed());
                 /*case R.id.mirror:
                     mSurface.setEditionMode(ViewerSurfaceView.MIRROR_EDITION_MODE);
                     mSurface.doMirror();
 
                     slicingCallback();
                     break;*/
-            case R.id.multiply_item_button:
-                hideCurrentActionPopUpWindow();
-                showMultiplyDialog();
-                break;
-            case R.id.delete_item_button:
-                hideCurrentActionPopUpWindow();
-                mSurface.deleteObject();
-                hideActionModePopUpWindow();
-                break;
+        } else if (id == R.id.multiply_item_button) {
+            hideCurrentActionPopUpWindow();
+            showMultiplyDialog();
+        } else if (id == R.id.delete_item_button) {
+            hideCurrentActionPopUpWindow();
+            mSurface.deleteObject();
+            hideActionModePopUpWindow();
         }
 
     }
@@ -1331,23 +1283,27 @@ public class ViewerMainFragment extends Fragment {
 
         //Remove soft-input from number picker
         numPicker.setDescendantFocusability(NumberPicker.FOCUS_BLOCK_DESCENDANTS);
-        final MaterialDialog.Builder createFolderDialog = new MaterialDialog.Builder(mContext);
-        createFolderDialog.title(R.string.viewer_menu_multiply_title)
-                .customView(multiplyModelDialog, true)
-                .positiveColorRes(R.color.theme_accent_1)
-                .positiveText(R.string.dialog_continue)
-                .negativeColorRes(R.color.body_text_2)
-                .negativeText(R.string.cancel)
-                .autoDismiss(true)
-                .callback(new MaterialDialog.ButtonCallback() {
+
+        new MaterialAlertDialogBuilder(mContext)
+                .setTitle(R.string.warning)
+                .setMessage(R.string.viewer_file_size)
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onPositive(MaterialDialog dialog) {
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Respond to negative button press
+                        dialog.dismiss();
+                    }
+                })
+                .setPositiveButton(R.string.dialog_continue, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // Respond to positive button press
                         drawCopies(numPicker.getValue());
                         slicingCallback();
+                        dialog.dismiss();
                     }
                 })
                 .show();
-
     }
 
     private static void drawCopies(int numCopies) {
@@ -1388,7 +1344,7 @@ public class ViewerMainFragment extends Fragment {
     public static void showProgressBar(int status, int i) {
 
 
-        if (mRootView!=null){
+        if (mRootView != null) {
 
 
             ProgressBar pb = (ProgressBar) mRootView.findViewById(R.id.progress_slice);
@@ -1396,7 +1352,7 @@ public class ViewerMainFragment extends Fragment {
             TextView tve = (TextView) mRootView.findViewById(R.id.viewer_text_estimated_time);
             TextView tve_title = (TextView) mRootView.findViewById(R.id.viewer_estimated_time_textview);
 
-            if ( mSlicingHandler.getLastReference()!= null) {
+            if (mSlicingHandler.getLastReference() != null) {
 
                 tve_title.setVisibility(View.VISIBLE);
                 pb.setVisibility(View.VISIBLE);
@@ -1486,7 +1442,7 @@ public class ViewerMainFragment extends Fragment {
 
                 }
 
-            }else {
+            } else {
 
                 pb.setVisibility(View.INVISIBLE);
                 tve_title.setVisibility(View.INVISIBLE);
@@ -1495,10 +1451,8 @@ public class ViewerMainFragment extends Fragment {
                 mRootView.invalidate();
 
 
-
             }
         }
-
 
 
     }
@@ -1527,12 +1481,12 @@ public class ViewerMainFragment extends Fragment {
             //mSizeText.setText("W = " + width + " mm / D = " + depth + " mm / H = " + height + " mm");
             //mSizeText.setText(String.format(mContext.getResources().getString(R.string.viewer_axis_info), Double.parseDouble(width), Double.parseDouble(depth), Double.parseDouble(height)));
 
-            Log.i("Scale","Vamos a petar " + width);
+            Log.i("Scale", "Vamos a petar " + width);
             ((TextView) mSizeText.findViewById(R.id.print_panel_x_size)).setText(width);
             ((TextView) mSizeText.findViewById(R.id.print_panel_y_size)).setText(depth);
             ((TextView) mSizeText.findViewById(R.id.print_panel_z_size)).setText(height);
 
-            if (mScaleLayout.getVisibility() == View.VISIBLE){
+            if (mScaleLayout.getVisibility() == View.VISIBLE) {
 
                 mScaleEditX.removeTextChangedListener(mTextWatcherX);
                 mScaleEditY.removeTextChangedListener(mTextWatcherY);
@@ -1624,7 +1578,7 @@ public class ViewerMainFragment extends Fragment {
 
     }
 
-    public static void slicingCallbackForced(){
+    public static void slicingCallbackForced() {
 
 //        SliceTask task = new SliceTask();
         mSidePanelHandler.refreshPrinters();
@@ -1634,7 +1588,7 @@ public class ViewerMainFragment extends Fragment {
         slicingHandler.post(mSliceRunnable);
     }
 
-    static Runnable mSliceRunnable = new Runnable(){
+    static Runnable mSliceRunnable = new Runnable() {
 
         @Override
         public void run() {
@@ -1669,7 +1623,7 @@ public class ViewerMainFragment extends Fragment {
         @Override
         protected Object doInBackground(Object[] objects) {
 
-            Log.i("Slicer","Starting background slicing task");
+            Log.i("Slicer", "Starting background slicing task");
 
             final List<DataStorage> newList = new ArrayList<DataStorage>(mDataList);
 
@@ -1752,9 +1706,9 @@ public class ViewerMainFragment extends Fragment {
 
     }
 
-    public static boolean isOutsidePlate(float x, float y){
+    public static boolean isOutsidePlate(float x, float y) {
 
-        if ((x < mCurrentPlate[1]) || (y < mCurrentPlate[2])){
+        if ((x < mCurrentPlate[1]) || (y < mCurrentPlate[2])) {
             return true;
         } else {
             return false;
@@ -1804,30 +1758,31 @@ public class ViewerMainFragment extends Fragment {
 
     }
 
-    public static void displayErrorInAxis(int axis){
+    public static void displayErrorInAxis(int axis) {
 
-        if (mScaleLayout.getVisibility() == View.VISIBLE){
-            switch (axis){
+        if (mScaleLayout.getVisibility() == View.VISIBLE) {
+            switch (axis) {
 
-                case 0: mScaleEditX.setError(mContext.getResources().getString(R.string.viewer_error_bigger_plate,mCurrentPlate[0] * 2));
+                case 0:
+                    mScaleEditX.setError(mContext.getResources().getString(R.string.viewer_error_bigger_plate, mCurrentPlate[0] * 2));
                     break;
 
-                case 1: mScaleEditY.setError(mContext.getResources().getString(R.string.viewer_error_bigger_plate,mCurrentPlate[1] * 2));
+                case 1:
+                    mScaleEditY.setError(mContext.getResources().getString(R.string.viewer_error_bigger_plate, mCurrentPlate[1] * 2));
                     break;
 
             }
         }
 
 
-
     }
 
 
-    private class ScaleChangeListener implements TextWatcher{
+    private class ScaleChangeListener implements TextWatcher {
 
         int mAxis;
 
-        private ScaleChangeListener(int axis){
+        private ScaleChangeListener(int axis) {
 
             mAxis = axis;
 
@@ -1855,35 +1810,34 @@ public class ViewerMainFragment extends Fragment {
 
 
             //Check decimals
-           if (editable.toString().endsWith(".")){
-               valid = false;
+            if (editable.toString().endsWith(".")) {
+                valid = false;
 
             }
 
 
             if (valid)
-            try{
-                switch (mAxis){
+                try {
+                    switch (mAxis) {
 
-                    case 0:
-                        mSurface.doScale(Float.parseFloat(editable.toString()), 0, 0, mUniformScale.isSelected());
-                        break;
+                        case 0:
+                            mSurface.doScale(Float.parseFloat(editable.toString()), 0, 0, mUniformScale.isSelected());
+                            break;
 
-                    case 1:
-                        mSurface.doScale(0, Float.parseFloat(editable.toString()), 0, mUniformScale.isSelected());
-                        break;
+                        case 1:
+                            mSurface.doScale(0, Float.parseFloat(editable.toString()), 0, mUniformScale.isSelected());
+                            break;
 
-                    case 2:
-                        mSurface.doScale(0, 0, Float.parseFloat(editable.toString()), mUniformScale.isSelected());
-                        break;
+                        case 2:
+                            mSurface.doScale(0, 0, Float.parseFloat(editable.toString()), mUniformScale.isSelected());
+                            break;
+
+                    }
+                } catch (NumberFormatException e) {
+
+                    e.printStackTrace();
 
                 }
-            } catch (NumberFormatException e){
-
-                e.printStackTrace();
-
-            }
-
 
 
         }

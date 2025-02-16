@@ -15,7 +15,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,6 +24,8 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 /**
  * Class to manage the application and printer settings
@@ -64,7 +65,7 @@ public class SettingsFragment extends Fragment {
             setHasOptionsMenu(true);
 
             //Update the actionbar to show the up carat/affordance
-            ((ActionBarActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            ((AppCompatActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
             //Inflate the fragment
             mRootView = inflater.inflate(R.layout.settings_layout, container, false);
@@ -109,21 +110,16 @@ public class SettingsFragment extends Fragment {
                 FragmentTransaction fragmentTransaction = mManager.beginTransaction();
                 fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_in_top, R.anim.fragment_slide_out_down);
 
-                switch (v.getId()) {
-                    case R.id.settings_nav_general_textview:
-                        SettingsGeneralFragment generalSettings = new SettingsGeneralFragment();
-                        fragmentTransaction.replace(R.id.settings_fragment_container, generalSettings).commit();
-                        break;
-                    case R.id.settings_nav_devices_textview:
-                        SettingsDevicesFragment devicesSettings = new SettingsDevicesFragment();
-                        fragmentTransaction.replace(R.id.settings_fragment_container, devicesSettings, ListContent.ID_DEVICES_SETTINGS).commit();
-                        break;
-                    case R.id.settings_nav_about_textview:
-                        SettingsAboutFragment aboutSettings = new SettingsAboutFragment();
-                        fragmentTransaction.replace(R.id.settings_fragment_container, aboutSettings, ListContent.ID_DEVICES_SETTINGS).commit();
-                        break;
-                    default:
-                        break;
+                int id = v.getId();
+                if (id == R.id.settings_nav_general_textview) {
+                    SettingsGeneralFragment generalSettings = new SettingsGeneralFragment();
+                    fragmentTransaction.replace(R.id.settings_fragment_container, generalSettings).commit();
+                } else if (id == R.id.settings_nav_devices_textview) {
+                    SettingsDevicesFragment devicesSettings = new SettingsDevicesFragment();
+                    fragmentTransaction.replace(R.id.settings_fragment_container, devicesSettings, ListContent.ID_DEVICES_SETTINGS).commit();
+                } else if (id == R.id.settings_nav_about_textview) {
+                    SettingsAboutFragment aboutSettings = new SettingsAboutFragment();
+                    fragmentTransaction.replace(R.id.settings_fragment_container, aboutSettings, ListContent.ID_DEVICES_SETTINGS).commit();
                 }
             }
         };
@@ -172,20 +168,16 @@ public class SettingsFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(android.view.MenuItem item) {
 
-        switch (item.getItemId()) {
-
-            case android.R.id.home:
-                getActivity().onBackPressed();
-                return true;
-
-            case R.id.settings_menu_add: //Add a new printer
-                //optionAddPrinter();
-                //new DiscoveryController(getActivity());
-                return true;
-
-            default:
-                return super.onOptionsItemSelected(item);
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            getActivity().onBackPressed();
+            return true;
+        } else if (itemId == R.id.settings_menu_add) { //Add a new printer
+            //optionAddPrinter();
+            //new DiscoveryController(getActivity());
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
 

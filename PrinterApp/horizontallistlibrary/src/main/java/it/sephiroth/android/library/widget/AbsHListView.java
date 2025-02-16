@@ -16,14 +16,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.v4.util.LongSparseArray;
-import android.support.v4.util.SparseArrayCompat;
-import android.support.v4.view.AccessibilityDelegateCompat;
-import android.support.v4.view.accessibility.AccessibilityEventCompat;
-import android.support.v4.view.accessibility.AccessibilityNodeInfoCompat;
-import android.support.v4.widget.EdgeEffectCompat;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.LongSparseArray;
 import android.util.TypedValue;
 import android.view.ActionMode;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -48,6 +43,12 @@ import android.widget.Adapter;
 import android.widget.Checkable;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+
+import androidx.collection.SparseArrayCompat;
+import androidx.core.view.AccessibilityDelegateCompat;
+import androidx.core.view.accessibility.AccessibilityEventCompat;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
+import androidx.core.widget.EdgeEffectCompat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -1271,7 +1272,7 @@ public abstract class AbsHListView extends AdapterView<ListAdapter> implements V
 	/**
 	 * When stack from bottom is set to true, the list fills its content starting from the bottom of the view.
 	 * 
-	 * @param stackFromBottom
+	 * @param stackFromRight
 	 *           true to pin the view's content to the bottom edge, false to pin the view's content to the top edge
 	 */
 	public void setStackFromRight( boolean stackFromRight ) {
@@ -4547,10 +4548,10 @@ public abstract class AbsHListView extends AdapterView<ListAdapter> implements V
 	/**
 	 * Track a motion scroll
 	 * 
-	 * @param deltaY
+	 * @param deltaX
 	 *           Amount to offset mMotionView. This is the accumulated delta since the motion began. Positive numbers mean the user's
 	 *           finger is moving down the screen.
-	 * @param incrementalDeltaY
+	 * @param incrementalDeltaX
 	 *           Change in deltaY from the previous event.
 	 * @return true if we're already at the beginning/end of the list and have nothing to do.
 	 */
@@ -4787,7 +4788,7 @@ public abstract class AbsHListView extends AdapterView<ListAdapter> implements V
 	/**
 	 * Find the col closest to x. This col will be used as the motion col when scrolling
 	 * 
-	 * @param y
+	 * @param x
 	 *           Where the user touched
 	 * @return The position of the first (or only) item in the col containing x
 	 */

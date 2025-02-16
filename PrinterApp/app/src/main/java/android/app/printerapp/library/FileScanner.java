@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.printerapp.Log;
 import android.app.printerapp.R;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +14,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -128,22 +130,18 @@ public class FileScanner {
         listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
         listView.setDivider(null);
 
-        new MaterialDialog.Builder(context)
-                .title(R.string.library_scan_dialog_title)
-                .customView(view, false)
-                .negativeText(R.string.cancel)
-                .negativeColorRes(R.color.body_text_2)
-                .positiveText(R.string.dialog_continue)
-                .positiveColorRes(R.color.theme_accent_1)
-                .callback(new MaterialDialog.ButtonCallback() {
+        new MaterialAlertDialogBuilder(context)
+                .setTitle(R.string.library_scan_dialog_title)
+                .setView(view)
+                .setPositiveButton(R.string.dialog_continue, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onPositive(MaterialDialog dialog) {
+                    public void onClick(DialogInterface dialogInterface, int i) {
                         SparseBooleanArray ids = listView.getCheckedItemPositions();
 
                         ArrayList<File> mCheckedFiles = new ArrayList<File>();
-                        for (int i = 0; i < ids.size(); i++) {
+                        for (int a = 0; a < ids.size(); a++) {
 
-                            if (ids.valueAt(i)) {
+                            if (ids.valueAt(a)) {
 
                                 File file = mFileList.get(ids.keyAt(i));
                                 mCheckedFiles.add(file);
@@ -153,13 +151,17 @@ public class FileScanner {
                         }
 
                         if (mCheckedFiles.size() > 0)
-                            LibraryModelCreation.enqueueJobs(context, mCheckedFiles); //enqueue checked files
+                            LibraryModelCreation.INSTANCE.enqueueJobs(context, mCheckedFiles); //enqueue checked files
 
                     }
                 })
-                .build()
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                    }
+                })
                 .show();
-
     }
 
 

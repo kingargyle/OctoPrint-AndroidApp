@@ -4,6 +4,7 @@ package android.app.printerapp.devices.printview;
 import android.app.Dialog;
 import android.app.DownloadManager;
 import android.app.Fragment;
+import android.app.ProgressDialog;
 import android.app.printerapp.Log;
 import android.app.printerapp.MainActivity;
 import android.app.printerapp.R;
@@ -32,8 +33,6 @@ import android.content.IntentFilter;
 import android.database.Cursor;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.widget.CardView;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -48,6 +47,10 @@ import android.widget.SeekBar;
 import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
+import androidx.core.content.ContextCompat;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.material.widget.PaperButton;
@@ -103,7 +106,7 @@ public class PrintViewFragment extends Fragment {
     private static Context mContext;
     private static int mActualProgress = 0;
 
-    private Dialog mDownloadDialog;
+    private ProgressDialog mDownloadDialog;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -149,7 +152,7 @@ public class PrintViewFragment extends Fragment {
                 //Update the actionbar to show the up carat/affordance
                 if (DatabaseController.count()>1){
 
-                    ((ActionBarActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+                    ((AppCompatActivity) getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
                 }
 
@@ -237,7 +240,7 @@ public class PrintViewFragment extends Fragment {
                 refreshData();
 
                 //Register receiver
-                mContext.registerReceiver(onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));
+                ContextCompat.registerReceiver(mContext, onComplete, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE), ContextCompat.RECEIVER_NOT_EXPORTED);
 
             }
 
@@ -263,22 +266,18 @@ public class PrintViewFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(android.view.MenuItem item) {
 
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                if (DatabaseController.count()>1) getActivity().onBackPressed();
-                return true;
-
-            case R.id.printview_add:
-                new DiscoveryController(getActivity()).scanDelayDialog();
-                return true;
-
-            case R.id.printview_settings:
-                //getActivity().onBackPressed();
-                MainActivity.showExtraFragment(0, 0);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        int itemId = item.getItemId();
+        if (itemId == android.R.id.home) {
+            if (DatabaseController.count() > 1) getActivity().onBackPressed();
+            return true;
+        } else if (itemId == R.id.printview_add) {
+            new DiscoveryController(getActivity()).scanDelayDialog();
+            return true;
+        } else if (itemId == R.id.printview_settings) {//getActivity().onBackPressed();
+            MainActivity.showExtraFragment(0, 0);
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     //Initialize all UI elements
@@ -492,9 +491,7 @@ public class PrintViewFragment extends Fragment {
 
     private double convertProgress(int amount){
 
-        double finalAmount = 0.1 * Math.pow(10,Math.abs(amount));
-
-        return finalAmount;
+        return 0.1 * Math.pow(10,Math.abs(amount));
 
     }
 
@@ -527,7 +524,7 @@ public class PrintViewFragment extends Fragment {
         double value = 0;
 
         try {
-            value = Double.valueOf(p);
+            value = Double.parseDouble(p);
         } catch (Exception e) {
             //e.printStackTrace();
         }
@@ -757,22 +754,13 @@ public class PrintViewFragment extends Fragment {
                     ((TextView) waitingForServiceDialogView.findViewById(R.id.progress_dialog_text)).setText(R.string.printview_download_dialog);
 
                     //Show progress dialog
-                    MaterialDialog.Builder connectionDialogBuilder = new MaterialDialog.Builder(mContext);
-                    connectionDialogBuilder.customView(waitingForServiceDialogView, true)
-                            .autoDismiss(false);
-
-                    //Progress dialog to notify command events
-                    mDownloadDialog = new MaterialDialog.Builder(mContext)
-                    .customView(waitingForServiceDialogView, true)
-                    .autoDismiss(false)
-                    .build();
+                    mDownloadDialog = new ProgressDialog(mContext);
+                    mDownloadDialog.setView(waitingForServiceDialogView);
                     mDownloadDialog.show();
 
                     //File changed, remove jobpath
                     mPrinter.setJobPath(null);
                 }
-
-
             }
 
         isGcodeLoaded = true;

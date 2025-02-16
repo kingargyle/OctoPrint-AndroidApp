@@ -66,4 +66,8 @@
 
     <color name="printer_view_bottom_bar">#7e7e7e</color>
 
+    <color name="hint_foreground_material_light">@color/black</color>
+    <color name="hint_foreground_material_dark">@color/white</color>
+    <color name="link_text_material_light">@color/theme_primary</color>"
+
 </resources>

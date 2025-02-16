@@ -171,25 +171,23 @@ public class DetailViewFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(android.view.MenuItem item) {
 
-        switch (item.getItemId()) {
+        int itemId = item.getItemId();
+        if (itemId == R.id.menu_favorite) { //Add a new printer
 
-            case R.id.menu_favorite: //Add a new printer
+            if (DatabaseController.isPreference(DatabaseController.TAG_FAVORITES, mFile.getName())) {
+                DatabaseController.handlePreference(DatabaseController.TAG_FAVORITES, mFile.getName(), null, false);
+                item.setIcon(getResources().getDrawable(R.drawable.ic_action_star_outline));
+            } else {
+                DatabaseController.handlePreference(DatabaseController.TAG_FAVORITES, mFile.getName(), mFile.getAbsolutePath(), true);
+                item.setIcon(getResources().getDrawable(R.drawable.ic_action_star));
+            }
 
-                if (DatabaseController.isPreference(DatabaseController.TAG_FAVORITES, mFile.getName())) {
-                    DatabaseController.handlePreference(DatabaseController.TAG_FAVORITES, mFile.getName(), null, false);
-                    item.setIcon(getResources().getDrawable(R.drawable.ic_action_star_outline));
-                } else {
-                    DatabaseController.handlePreference(DatabaseController.TAG_FAVORITES, mFile.getName(), mFile.getAbsolutePath(), true);
-                    item.setIcon(getResources().getDrawable(R.drawable.ic_action_star));
-                }
-
-                return true;
-            case android.R.id.home:
-                getActivity().onBackPressed();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+            return true;
+        } else if (itemId == android.R.id.home) {
+            getActivity().onBackPressed();
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
 

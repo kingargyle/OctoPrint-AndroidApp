@@ -14,7 +14,6 @@ import android.content.ClipData;
 import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.support.v4.content.LocalBroadcastManager;
 import android.view.DragEvent;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -30,6 +29,8 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 /**
  * This is the fragment that will contain the Device Grid and functionality
@@ -117,23 +118,19 @@ import android.widget.Toast;
     @Override
     public boolean onOptionsItemSelected(android.view.MenuItem item) {
 
-        switch (item.getItemId()) {
+        int itemId = item.getItemId();
+        if (itemId == R.id.devices_add) {
+            new DiscoveryController(getActivity()).scanDelayDialog();
+            return true;
+        } else if (itemId == R.id.settings) {
+            MainActivity.showExtraFragment(0, 0);
+            return true;
+        } else if (itemId == R.id.devices_menu_reload) { //Reload service discovery
 
-            case R.id.devices_add:
-                new DiscoveryController(getActivity()).scanDelayDialog();
-                return true;
-
-            case R.id.settings:
-                MainActivity.showExtraFragment(0, 0);
-                return true;
-
-            case R.id.devices_menu_reload: //Reload service discovery
-
-                //optionReload();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+            //optionReload();
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
 

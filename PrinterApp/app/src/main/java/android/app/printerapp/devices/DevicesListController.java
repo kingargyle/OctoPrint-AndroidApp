@@ -10,6 +10,7 @@ import android.app.printerapp.octoprint.StateUtils;
 import android.app.printerapp.viewer.SlicingHandler;
 import android.app.printerapp.viewer.ViewerMainFragment;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Handler;
 import android.view.LayoutInflater;
@@ -19,6 +20,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -243,49 +245,41 @@ public class DevicesListController {
             selectPrinterSpinner.setAdapter(printerAdapter);
 
             //Show the dialog
-            final MaterialDialog.Builder selectPrinterDialog = new MaterialDialog.Builder(context);
-            selectPrinterDialog.title(dialogTitle)
-                    .customView(selectPrinterView, true)
-                    .positiveColorRes(R.color.theme_accent_1)
-                    .positiveText(R.string.library_print_model)
-                    .negativeColorRes(R.color.body_text_2)
-                    .negativeText(R.string.cancel)
-                    .autoDismiss(false)
-                    .callback(new MaterialDialog.ButtonCallback() {
-                        @Override
-                        public void onPositive(MaterialDialog dialog) {
+            final MaterialAlertDialogBuilder selectPrinterDialogBuilder = new MaterialAlertDialogBuilder(context);
+            selectPrinterDialogBuilder.setTitle(dialogTitle);
+            selectPrinterDialogBuilder.setView(selectPrinterView);
+            selectPrinterDialogBuilder.setPositiveButton(R.string.library_print_model, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    ModelPrinter m = tempList.get(selectPrinterSpinner.getSelectedItemPosition());
 
-                            ModelPrinter m = tempList.get(selectPrinterSpinner.getSelectedItemPosition());
+                    if (slicer != null) {
 
-                            if (slicer != null) {
+                        slicer.setPrinter(m);
+                        slicer.setExtras("print", true);
 
-                                slicer.setPrinter(m);
-                                slicer.setExtras("print", true);
+                        m.setLoaded(false);
 
-                                m.setLoaded(false);
+                    } else {
+                        OctoprintFiles.getFiles(context, m, file);
+                        //OctoprintFiles.uploadFile(context, file, m);
+                    }
+                    MainActivity.performClick(2);
+                    MainActivity.showExtraFragment(1, m.getId());
 
-                            } else {
-                                OctoprintFiles.getFiles(context, m, file);
-                                //OctoprintFiles.uploadFile(context, file, m);
-                            }
-                            MainActivity.performClick(2);
-                            MainActivity.showExtraFragment(1, m.getId());
+                    dialogInterface.dismiss();
 
-                            dialog.dismiss();
+                    ViewerMainFragment.optionClean();
+                }
+            });
+            selectPrinterDialogBuilder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    dialogInterface.dismiss();
+                }
+            });
 
-                            ViewerMainFragment.optionClean();
-
-
-
-                        }
-
-                        @Override
-                        public void onNegative(MaterialDialog dialog) {
-                            dialog.dismiss();
-                        }
-
-                    })
-                    .show();
+            selectPrinterDialogBuilder.show();
         } else if (printersList.length == 1 ){
 
             ModelPrinter m = tempList.get(0);
@@ -362,8 +356,6 @@ public class DevicesListController {
                        return p;
 
            }
-
-
         }
         return null;
 

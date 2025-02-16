@@ -2,6 +2,7 @@ package android.app.printerapp.library;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.printerapp.Log;
 import android.app.printerapp.MainActivity;
@@ -30,7 +31,7 @@ import android.widget.RadioGroup;
 import android.widget.TextView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.afollestad.materialdialogs.MaterialDialogCompat;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.rengwuxian.materialedittext.MaterialEditText;
 
 import java.io.File;
@@ -230,35 +231,33 @@ public class LibraryFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(android.view.MenuItem item) {
 
-        switch (item.getItemId()) {
-            case R.id.library_search:
-                optionSearchLibrary();
-                return true;
-            case R.id.library_add:
-                //optionAddLibrary();
-                optionSearchSystem();
-                return true;
-            case R.id.library_sort:
-                optionSort();
-                return true;
-            case R.id.library_create:
-                optionCreateLibrary();
-                return true;
-            case R.id.library_paste:
-                optionPaste();
-                return true;
-            case R.id.library_reload:
-                refreshFiles();
-                return true;
-            case R.id.library_models:
-                optionGetModelsDialog();
-                return true;
-            case R.id.library_settings:
-                MainActivity.showExtraFragment(0, 0);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        int itemId = item.getItemId();
+        if (itemId == R.id.library_search) {
+            optionSearchLibrary();
+            return true;
+        } else if (itemId == R.id.library_add) {//optionAddLibrary();
+            optionSearchSystem();
+            return true;
+        } else if (itemId == R.id.library_sort) {
+            optionSort();
+            return true;
+        } else if (itemId == R.id.library_create) {
+            optionCreateLibrary();
+            return true;
+        } else if (itemId == R.id.library_paste) {
+            optionPaste();
+            return true;
+        } else if (itemId == R.id.library_reload) {
+            refreshFiles();
+            return true;
+        } else if (itemId == R.id.library_models) {
+            optionGetModelsDialog();
+            return true;
+        } else if (itemId == R.id.library_settings) {
+            MainActivity.showExtraFragment(0, 0);
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -291,21 +290,15 @@ public class LibraryFragment extends Fragment {
 
                 LibraryController.setCurrentPath(LibraryController.getParentFolder() + "/Files");
 
-                switch (v.getId()) {
-                    case R.id.library_nav_all_models:
-                        mCurrentTab = LibraryController.TAB_ALL;
-                        break;
-                    case R.id.library_nav_local_models:
-                        mCurrentTab = LibraryController.TAB_CURRENT;
-                        break;
-                    case R.id.library_nav_printer_models:
-                        mCurrentTab = LibraryController.TAB_PRINTER;
-                        break;
-                    case R.id.library_nav_fav_models:
-                        mCurrentTab = LibraryController.TAB_FAVORITES;
-                        break;
-                    default:
-                        break;
+                int id = v.getId();
+                if (id == R.id.library_nav_all_models) {
+                    mCurrentTab = LibraryController.TAB_ALL;
+                } else if (id == R.id.library_nav_local_models) {
+                    mCurrentTab = LibraryController.TAB_CURRENT;
+                } else if (id == R.id.library_nav_printer_models) {
+                    mCurrentTab = LibraryController.TAB_PRINTER;
+                } else if (id == R.id.library_nav_fav_models) {
+                    mCurrentTab = LibraryController.TAB_FAVORITES;
                 }
                 refreshFiles();
                 hideListHeader();
@@ -359,7 +352,8 @@ public class LibraryFragment extends Fragment {
 
         final EditText et = new EditText(getActivity());
 
-        MaterialDialogCompat.Builder adb = new MaterialDialogCompat.Builder(getActivity());
+        MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(getActivity());
+
         adb.setTitle(R.string.library_search_dialog_title);
         adb.setView(et);
 
@@ -412,17 +406,13 @@ public class LibraryFragment extends Fragment {
         View getModelsDialogView = inflater.inflate(R.layout.dialog_create_folder, null);
         final MaterialEditText nameEditText = (MaterialEditText) getModelsDialogView.findViewById(R.id.new_folder_name_edittext);
 
-        final MaterialDialog.Builder createFolderDialog = new MaterialDialog.Builder(getActivity());
-        createFolderDialog.title(R.string.library_create_dialog_title)
-                .customView(getModelsDialogView, true)
-                .positiveColorRes(R.color.theme_accent_1)
-                .positiveText(R.string.create)
-                .negativeColorRes(R.color.body_text_2)
-                .negativeText(R.string.cancel)
-                .autoDismiss(false)
-                .callback(new MaterialDialog.ButtonCallback() {
+        final MaterialAlertDialogBuilder createFolderDialog = new MaterialAlertDialogBuilder(getActivity());
+
+        createFolderDialog.setTitle(R.string.library_create_dialog_title)
+                .setView(getModelsDialogView)
+                .setPositiveButton(R.string.create, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onPositive(MaterialDialog dialog) {
+                    public void onClick(DialogInterface dialog, int i) {
                         String name = nameEditText.getText().toString().trim();
                         if (name == null || name.equals("")) {
                             nameEditText.setError(getString(R.string.library_create_folder_name_error));
@@ -433,11 +423,12 @@ public class LibraryFragment extends Fragment {
                             dialog.dismiss();
                         }
                     }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onNegative(MaterialDialog dialog) {
+                    public void onClick(DialogInterface dialog, int i) {
                         dialog.dismiss();
                     }
-
                 })
                 .show();
     }
@@ -485,54 +476,27 @@ public class LibraryFragment extends Fragment {
 
         }
 
-
-        new MaterialDialog.Builder(getActivity()).title(R.string.library_menu_sort)
-            .customView(librarySortView, true)
-            .positiveColorRes(R.color.theme_accent_1)
-            .positiveText(R.string.ok)
-            .callback(new MaterialDialog.ButtonCallback() {
-                @Override
-                public void onPositive(MaterialDialog dialog) {
-
-                    switch (radioGroup.getCheckedRadioButtonId()) {
-
-                        case R.id.sort_name_checkbox:
-
+        new MaterialAlertDialogBuilder(getActivity())
+                .setTitle(R.string.library_menu_sort)
+                .setView(librarySortView)
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int i) {
+                        int checkedRadioButtonId = radioGroup.getCheckedRadioButtonId();
+                        if (checkedRadioButtonId == R.id.sort_name_checkbox) {
                             mSortType = SORT_NAME;
-
-                            break;
-
-                        case R.id.sort_recent_checkbox:
-
+                        } else if (checkedRadioButtonId == R.id.sort_recent_checkbox) {
                             mSortType = SORT_DATE;
-
-                            break;
-
-                        case R.id.sort_size_checkbox:
-
+                        } else if (checkedRadioButtonId == R.id.sort_size_checkbox) {
                             mSortType = SORT_SIZE;
+                        }
 
-                            break;
-
-                        default:
-
-                            break;
-
-
+                        sortAdapter();
+                        dialog.dismiss();
                     }
+                })
+                .show();
 
-                    sortAdapter();
-
-                }
-
-                @Override
-                public void onNegative(MaterialDialog dialog) {
-                    dialog.dismiss();
-                }
-
-            })
-            .build()
-            .show();
 
     }
 
@@ -544,12 +508,16 @@ public class LibraryFragment extends Fragment {
         LayoutInflater inflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View getModelsDialogView = inflater.inflate(R.layout.dialog_get_models, null);
 
-        final MaterialDialog getModelsDialog = new MaterialDialog.Builder(getActivity())
-                .title(R.string.library_get_models_title)
-                .customView(getModelsDialogView, true)
-                .positiveColorRes(R.color.body_text_1)
-                .positiveText(R.string.close)
-                .show();
+        final androidx.appcompat.app.AlertDialog getModelsDialog = new MaterialAlertDialogBuilder(getActivity())
+        .setTitle(R.string.library_get_models_title)
+        .setView(getModelsDialogView)
+        .setPositiveButton(R.string.close, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int i) {
+                        dialog.dismiss();
+                    }
+                }
+        ).show();
 
         LinearLayout thingiverseButton = (LinearLayout) getModelsDialogView.findViewById(R.id.thingiverse_button);
         thingiverseButton.setOnClickListener(new View.OnClickListener() {

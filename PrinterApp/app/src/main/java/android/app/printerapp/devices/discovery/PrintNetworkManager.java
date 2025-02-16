@@ -8,6 +8,7 @@ import android.app.printerapp.devices.database.DatabaseController;
 import android.app.printerapp.model.ModelPrinter;
 import android.app.printerapp.octoprint.OctoprintNetwork;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
@@ -21,7 +22,10 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AlertDialog;
+
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -164,16 +168,17 @@ public class PrintNetworkManager {
             LayoutInflater inflater = (LayoutInflater) getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             View selectWifiNetworkDialogView = inflater.inflate(R.layout.dialog_select_wifi_network, null);
 
-            MaterialDialog.Builder adb;
-            final Dialog selectNetworkDialog;
 
-            adb = new MaterialDialog.Builder(getContext())
-                    .title(R.string.devices_configure_wifi_title)
-                    .customView(selectWifiNetworkDialogView, false)
-                    .negativeText(R.string.cancel)
-                    .negativeColorRes(R.color.body_text_2);
-
-            selectNetworkDialog = adb.build();
+            final Dialog selectNetworkDialog = new MaterialAlertDialogBuilder(getContext())
+                    .setTitle(R.string.devices_configure_wifi_title)
+                    .setView(selectWifiNetworkDialogView)
+                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            dialogInterface.dismiss();
+                        }
+                    })
+                    .show();
 
             ListView wifiNetworksListView = (ListView) selectWifiNetworkDialogView.findViewById(R.id.wifi_networks_listview);
             wifiNetworksListView.setAdapter(networkListDialogAdapter);
@@ -214,17 +219,12 @@ public class PrintNetworkManager {
                     try {
                         if (wifis.getJSONObject(position).getBoolean("encrypted")){
 
-                            new MaterialDialog.Builder(getContext())
-                                    .title(wifiList.get(position))
-                                    .customView(wifiPasswordDialogView, false)
-                                    .positiveText(R.string.ok)
-                                    .positiveColorRes(R.color.theme_accent_1)
-                                    .negativeText(R.string.cancel)
-                                    .negativeColorRes(R.color.body_text_2)
-                                    .autoDismiss(false)
-                                    .callback(new MaterialDialog.ButtonCallback() {
+                            new MaterialAlertDialogBuilder(getContext())
+                                    .setTitle(wifiList.get(position))
+                                    .setView(wifiPasswordDialogView)
+                                    .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                                         @Override
-                                        public void onPositive(MaterialDialog dialog) {
+                                        public void onClick(DialogInterface dialogInterface, int i) {
                                             final String ssid = wifiList.get(position).toString();
                                             String psk = wifiPasswordEditText.getText().toString().trim();
 
@@ -233,15 +233,17 @@ public class PrintNetworkManager {
                                             } else {
                                                 configureSelectedNetwork(ssid, psk, url);
                                                 mReceiver.unregister();
-                                                dialog.dismiss();
+                                                dialogInterface.dismiss();
                                                 selectNetworkDialog.dismiss();
                                                 wifiPasswordEditText.clearFocus();
                                             }
-                                        }
 
+                                        }
+                                    })
+                                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
                                         @Override
-                                        public void onNegative(MaterialDialog dialog) {
-                                            dialog.dismiss();
+                                        public void onClick(DialogInterface dialogInterface, int i) {
+                                            dialogInterface.dismiss();
                                         }
                                     })
                                     .show();
@@ -379,24 +381,19 @@ public class PrintNetworkManager {
         ((TextView) configurePrinterDialogView.findViewById(R.id.progress_dialog_text)).setText(message);
 
         //Show progress dialog
-        final MaterialDialog.Builder configurePrinterDialogBuilder = new MaterialDialog.Builder(mController.getActivity());
-        configurePrinterDialogBuilder.title(R.string.devices_discovery_title)
-                .customView(configurePrinterDialogView, true)
-                .cancelable(false)
-                .negativeText(R.string.cancel)
-                .callback(new MaterialDialog.ButtonCallback() {
-                    @Override
-                    public void onNegative(MaterialDialog dialog) {
-                        super.onNegative(dialog);
-                        dialog.setOnDismissListener(null);
-                        dialog.dismiss();
+        final MaterialAlertDialogBuilder configurePrinterDialogBuilder = new MaterialAlertDialogBuilder(mController.getActivity());
 
+        configurePrinterDialogBuilder.setTitle(R.string.devices_discovery_title)
+                .setView(configurePrinterDialogView)
+                .setCancelable(false)
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int i) {
+                        dialog.dismiss();
                     }
-                })
-                .autoDismiss(false);
+                });
         //Progress dialog to notify command events
-        mDialog = configurePrinterDialogBuilder.build();
-        mDialog.show();
+        mDialog = configurePrinterDialogBuilder.show();
     }
 
     /**

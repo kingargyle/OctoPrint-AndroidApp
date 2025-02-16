@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:widget="http://schemas.android.com/apk/res-auto"
-    xmlns:materialdesign="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main_relative_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -268,12 +267,11 @@
                                 android:orientation="horizontal"
                                 android:visibility="gone">
 
-                                <android.app.printerapp.util.ui.CustomEditableSlider
+                                <com.google.android.material.slider.Slider
                                     android:id="@+id/print_panel_slider"
                                     android:layout_width="fill_parent"
                                     android:layout_height="wrap_content"
-                                    android:background="#1E88E5"
-                                    materialdesign:showNumberIndicator="true"/>
+                                    android:background="#1E88E5" />
 
 
                             </LinearLayout>
@@ -458,13 +456,13 @@
                                 android:id="@+id/slice_model_button"
                                 style="@style/MaterialDesignButton.Raised.Default"
                                 android:layout_width="150dp"
-                                widget:paper_text="@string/slice" />
+                                app:paper_text="@string/slice" />
 
                             <com.material.widget.PaperButton
                                 android:id="@+id/print_model_button"
                                 style="@style/MaterialDesignButton.Raised.Default"
                                 android:layout_width="150dp"
-                                widget:paper_text="@string/viewer_button_print" />
+                                app:paper_text="@string/viewer_button_print" />
 
 
                             </LinearLayout>

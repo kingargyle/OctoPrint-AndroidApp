@@ -14,7 +14,10 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.TextView;
 
+import androidx.appcompat.app.AlertDialog;
+
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -150,22 +153,19 @@ public class FileBrowser extends Activity  {
 
                 mDialogFileList = fileList.toArray(mDialogFileList);
 
-                MaterialDialog.Builder dialogBuilder = new MaterialDialog.Builder(mContext)
-                        .title(mTitle)
-                        .customView(view, false)
-                        .negativeText(R.string.cancel)
-                        .negativeColorRes(R.color.theme_accent_1)
-                        .callback(new MaterialDialog.ButtonCallback() {
-                            @Override
-                            public void onNegative(MaterialDialog dialog) {
-                                mFileListListener.onClickFileList(null);
-                                dialog.dismiss();
-                            }
-                        });
-                dialogBuilder.keyListener(mKeyListener);
-
-                dialog = dialogBuilder.build();
-                dialog.show();
+				AlertDialog alertDialog = new MaterialAlertDialogBuilder(mContext)
+						.setTitle(mTitle)
+						.setView(view)
+						.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+									@Override
+									public void onClick(DialogInterface dialogInterface, int i) {
+										mFileListListener.onClickFileList(null);
+										dialogInterface.dismiss();
+									}
+								}
+						)
+						.setOnKeyListener(mKeyListener)
+						.show();
 
                 listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
@@ -184,7 +184,7 @@ public class FileBrowser extends Activity  {
                                 mFileListListener.onClickFileList(file);
                             }
                         }
-                        dialog.dismiss();
+                        alertDialog.dismiss();
                     }
                 });
 			}

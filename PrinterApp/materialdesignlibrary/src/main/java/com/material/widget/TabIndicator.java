@@ -1,20 +1,22 @@
 package com.material.widget;
 
+import static androidx.viewpager.widget.ViewPager.*;
+
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.*;
 import android.os.Build;
-import android.support.annotation.NonNull;
-import android.support.v4.view.ViewPager;
-import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.ViewTreeObserver;
 import android.widget.*;
+
+import androidx.annotation.NonNull;
+import androidx.viewpager.widget.ViewPager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -410,7 +412,7 @@ public class TabIndicator extends HorizontalScrollView implements Animator.Anima
         }
     }
 
-    private class TabView extends Button {
+    private class TabView extends androidx.appcompat.widget.AppCompatButton {
 
         private int index;
         private int mTabWidth;
@@ -542,7 +544,7 @@ public class TabIndicator extends HorizontalScrollView implements Animator.Anima
 
     }
 
-    private class NavButton extends ImageButton {
+    private class NavButton extends androidx.appcompat.widget.AppCompatImageButton {
 
         public static final int FORWARD = 1;
         public static final int BACKWARD = 2;
@@ -564,11 +566,7 @@ public class TabIndicator extends HorizontalScrollView implements Animator.Anima
 
         public NavButton(Context context, AttributeSet attrs, int defStyle) {
             super(context, attrs, defStyle);
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
-//                setBackgroundDrawable(null);
-            } else {
-                setBackground(null);
-            }
+            setBackground(null);
             setScaleType(ScaleType.CENTER);
             setBackgroundColor(Color.TRANSPARENT);
         }

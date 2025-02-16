@@ -3,10 +3,11 @@ package com.material.widget;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.*;
-import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.widget.CompoundButton;
+
+import androidx.annotation.NonNull;
 
 /**
  * Created by IntelliJ IDEA.

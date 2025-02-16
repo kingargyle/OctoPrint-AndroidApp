@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
 import org.apache.http.Header;
@@ -57,11 +58,10 @@ public class OctoprintControl {
         ((TextView) waitingForServiceDialogView.findViewById(R.id.progress_dialog_text)).setText(R.string.devices_configure_waiting);
 
         //Show progress dialog
-        MaterialDialog.Builder connectionDialogBuilder = new MaterialDialog.Builder(context);
-        connectionDialogBuilder.customView(waitingForServiceDialogView, true)
-                .autoDismiss(false);
+		MaterialAlertDialogBuilder connectionDialogBuilder = new MaterialAlertDialogBuilder(context);
+		connectionDialogBuilder.setView(waitingForServiceDialogView);
 
-        final Dialog connectionDialog = connectionDialogBuilder.build();
+        final Dialog connectionDialog = connectionDialogBuilder.create();
         connectionDialog.show();
 
 		

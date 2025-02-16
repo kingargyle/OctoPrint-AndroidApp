@@ -12,9 +12,8 @@ import android.app.printerapp.model.ModelFile;
 import android.app.printerapp.model.ModelPrinter;
 import android.app.printerapp.octoprint.OctoprintFiles;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.view.ActionMode;
 import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -31,7 +30,12 @@ import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ActionMode;
+
 import com.afollestad.materialdialogs.MaterialDialog;
+import com.afollestad.materialdialogs.ModalDialog;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.io.File;
 
@@ -137,51 +141,51 @@ public class LibraryOnClickListener implements OnItemClickListener, OnItemLongCl
 
                     try {
 
-                        new MaterialDialog.Builder(mContext.getActivity())
-                                .title(mContext.getResources().getString(R.string.library_select_printer_title))
-                                .content(f.getName())
-                                .positiveColorRes(R.color.theme_accent_1)
-                                .positiveText(R.string.confirm)
-                                .callback(new MaterialDialog.ButtonCallback() {
-                                    @Override
-                                    public void onPositive(MaterialDialog dialog) {
-                                        super.onPositive(dialog);
 
-
-                                        ModelPrinter p = DevicesListController.getPrinter(Long.parseLong(LibraryController.getCurrentPath().getName()));
-
-                                        //it's a printer folder because there's a printer with the same name
-                                        if (p != null) {
-                                            Log.i("File","Clicking " + f.getAbsolutePath());
-                                            //either sd or internal (must check for folders inside sd
-                                            if (f.getAbsolutePath().substring(0,3).equals("/sd")) {
-
-                                                String finalName = f.getAbsolutePath().substring(4,f.getAbsolutePath().length());
-                                                Log.i("File","Loading " + finalName);
-
-                                                OctoprintFiles.fileCommand(mContext.getActivity(), p.getAddress(), finalName, "/sdcard/", false, true);
-                                                //OctoprintSlicing.sliceCommand(mContext.getActivity(), p.getAddress(), f, "/local/");
-                                            } else
-                                                OctoprintFiles.fileCommand(mContext.getActivity(), p.getAddress(), f.getName(), "/local/", false, true);
-                                            Toast.makeText(mContext.getActivity(), "Loading " + f.getName() + " in " + p.getDisplayName(), Toast.LENGTH_LONG).show();
-                                        } else {
-
-                                            //it's a raw file
-                                            if (f.getAbsoluteFile().length() > 0) {
-                                                //TODO select printer for raw files?
-                                                //DevicesListController.selectPrinter(mContext.getActivity(), f , 0);
-                                                MainActivity.requestOpenFile(f.getAbsolutePath());
-
-                                            } else {
-                                                Toast.makeText(mContext.getActivity(), R.string.storage_toast_corrupted, Toast.LENGTH_SHORT).show();
-                                            }
-                                        }
-
-
-                                    }
-                                })
-                                .negativeText(R.string.cancel)
-                                .show();
+//                        new MaterialDialog(mContext.getActivity(), MaterialDialog.getDEFAULT_BEHAVIOR())
+//                                .title(R.string.library_select_printer_title, null)
+//                                .positiveColorRes(R.color.theme_accent_1)
+//                                .positiveText(R.string.confirm)
+//                                .callback(new MaterialDialog.ButtonCallback() {
+//                                    @Override
+//                                    public void onPositive(MaterialDialog dialog) {
+//                                        super.onPositive(dialog);
+//
+//
+//                                        ModelPrinter p = DevicesListController.getPrinter(Long.parseLong(LibraryController.getCurrentPath().getName()));
+//
+//                                        //it's a printer folder because there's a printer with the same name
+//                                        if (p != null) {
+//                                            Log.i("File","Clicking " + f.getAbsolutePath());
+//                                            //either sd or internal (must check for folders inside sd
+//                                            if (f.getAbsolutePath().substring(0,3).equals("/sd")) {
+//
+//                                                String finalName = f.getAbsolutePath().substring(4,f.getAbsolutePath().length());
+//                                                Log.i("File","Loading " + finalName);
+//
+//                                                OctoprintFiles.fileCommand(mContext.getActivity(), p.getAddress(), finalName, "/sdcard/", false, true);
+//                                                //OctoprintSlicing.sliceCommand(mContext.getActivity(), p.getAddress(), f, "/local/");
+//                                            } else
+//                                                OctoprintFiles.fileCommand(mContext.getActivity(), p.getAddress(), f.getName(), "/local/", false, true);
+//                                            Toast.makeText(mContext.getActivity(), "Loading " + f.getName() + " in " + p.getDisplayName(), Toast.LENGTH_LONG).show();
+//                                        } else {
+//
+//                                            //it's a raw file
+//                                            if (f.getAbsoluteFile().length() > 0) {
+//                                                //TODO select printer for raw files?
+//                                                //DevicesListController.selectPrinter(mContext.getActivity(), f , 0);
+//                                                MainActivity.requestOpenFile(f.getAbsolutePath());
+//
+//                                            } else {
+//                                                Toast.makeText(mContext.getActivity(), R.string.storage_toast_corrupted, Toast.LENGTH_SHORT).show();
+//                                            }
+//                                        }
+//
+//
+//                                    }
+//                                })
+//                                .negativeText(R.string.cancel)
+//                                .show();
 
 
 
@@ -200,7 +204,7 @@ public class LibraryOnClickListener implements OnItemClickListener, OnItemLongCl
     private void showRightPanel(final int index) {
 
         FragmentTransaction fragmentTransaction = mContext.getFragmentManager().beginTransaction();
-        fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_in_right, R.anim.fragment_slide_out_right);
+//        fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_in_right, R.anim.fragment_slide_out_right);
 
         //New DetailView with the file as an index
         DetailViewFragment detail = new DetailViewFragment();
@@ -257,53 +261,48 @@ public class LibraryOnClickListener implements OnItemClickListener, OnItemLongCl
         popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             public boolean onMenuItemClick(MenuItem item) {
 
-                switch (item.getItemId()) {
-                    case R.id.library_model_print: //Print / Multiprint
-                        if (f.isDirectory()) {
-                            if (LibraryController.isProject(f)) {
-                                //Show detail view as a fragment
-                                showRightPanel(index);
-                            }
-                        } else {
-                            MainActivity.requestOpenFile(f.getAbsolutePath());
-
+                int itemId = item.getItemId();
+                if (itemId == R.id.library_model_print) { //Print / Multiprint
+                    if (f.isDirectory()) {
+                        if (LibraryController.isProject(f)) {
+                            //Show detail view as a fragment
+                            showRightPanel(index);
                         }
-                        break;
-                    case R.id.library_model_edit: //Edit
-                        //TODO Doesn't work when empty gcodes comeon
-                        popup.dismiss();
-                        if (f.isDirectory()) {
-                            if (LibraryController.isProject(f)) {
+                    } else {
+                        MainActivity.requestOpenFile(f.getAbsolutePath());
 
-                                if (((ModelFile) f).getStl() == null) {
-                                    MainActivity.requestOpenFile(((ModelFile) f).getGcodeList());
-                                    //DevicesListController.selectPrinter(mContext.getActivity(), new File (((ModelFile)f).getGcodeList()) , 0);
+                    }
+                } else if (itemId == R.id.library_model_edit) { //Edit
+                    //TODO Doesn't work when empty gcodes comeon
+                    popup.dismiss();
+                    if (f.isDirectory()) {
+                        if (LibraryController.isProject(f)) {
 
-                                } else {
-                                    MainActivity.requestOpenFile(((ModelFile) f).getStl());
+                            if (((ModelFile) f).getStl() == null) {
+                                MainActivity.requestOpenFile(((ModelFile) f).getGcodeList());
+                                //DevicesListController.selectPrinter(mContext.getActivity(), new File (((ModelFile)f).getGcodeList()) , 0);
 
-                                }
-                            }
-                        } else {
-                            //Check if the gcode is empty, won't work if file is actually corrupted
-                            if (f.getAbsoluteFile().length() > 0) {
-                                MainActivity.requestOpenFile(f.getAbsolutePath());
                             } else {
-                                Toast.makeText(mContext.getActivity(), R.string.storage_toast_corrupted, Toast.LENGTH_SHORT).show();
+                                MainActivity.requestOpenFile(((ModelFile) f).getStl());
+
                             }
                         }
-                        break;
-                    case R.id.library_model_move: //Move
-                        mContext.setMoveFile(f);
-                        Toast.makeText(mContext.getActivity(), R.string.library_paste_toast, Toast.LENGTH_SHORT).show();
-                        break;
-                    case R.id.library_model_delete: //Delete
+                    } else {
+                        //Check if the gcode is empty, won't work if file is actually corrupted
+                        if (f.getAbsoluteFile().length() > 0) {
+                            MainActivity.requestOpenFile(f.getAbsolutePath());
+                        } else {
+                            Toast.makeText(mContext.getActivity(), R.string.storage_toast_corrupted, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                } else if (itemId == R.id.library_model_move) { //Move
+                    mContext.setMoveFile(f);
+                    Toast.makeText(mContext.getActivity(), R.string.library_paste_toast, Toast.LENGTH_SHORT).show();
+                } else if (itemId == R.id.library_model_delete) { //Delete
 
-                        SparseBooleanArray ids = new SparseBooleanArray();
-                        ids.append(index,true);
-                        createDeleteDialog(ids);
-
-                        break;
+                    SparseBooleanArray ids = new SparseBooleanArray();
+                    ids.append(index, true);
+                    createDeleteDialog(ids);
                 }
                 return true;
             }
@@ -330,7 +329,7 @@ public class LibraryOnClickListener implements OnItemClickListener, OnItemLongCl
         }
 
         // Start the CAB using the ActionMode.Callback defined above
-        mActionMode = ((ActionBarActivity)mContext.getActivity()).startSupportActionMode(mActionModeCallback);
+        mActionMode = ((AppCompatActivity)mContext.getActivity()).startSupportActionMode(mActionModeCallback);
 //        view.setSelected(true);
 
         return false;
@@ -361,13 +360,9 @@ public class LibraryOnClickListener implements OnItemClickListener, OnItemLongCl
         // Called when the user selects a contextual menu item
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            switch (item.getItemId()) {
-
-                case R.id.library_menu_delete:
-
-                    SparseBooleanArray ids = mListView.getCheckedItemPositions();
-                    createDeleteDialog(ids);
-
+            if (item.getItemId() == R.id.library_menu_delete) {
+                SparseBooleanArray ids = mListView.getCheckedItemPositions();
+                createDeleteDialog(ids);
             }
 
             return false;
@@ -426,49 +421,30 @@ public class LibraryOnClickListener implements OnItemClickListener, OnItemLongCl
 
        }
 
-
-       new MaterialDialog.Builder(mContext.getActivity())
-               .title(mContext.getResources().getQuantityString(R.plurals.library_models_delete_title, ids.size()))
-               .customView(deleteDialogView, true)
-               .positiveColorRes(R.color.theme_accent_1)
-               .positiveText(R.string.confirm)
-               .callback(new MaterialDialog.ButtonCallback() {
-
+       new MaterialAlertDialogBuilder(mContext.getActivity())
+               .setTitle("File Removal")
+               .setView(deleteDialogView)
+               .setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener() {
                    @Override
-                   public void onNegative(MaterialDialog dialog) {
-                       super.onNegative(dialog);
-
-                       hideActionBar();
-
-                   }
-
-                   @Override
-                   public void onPositive(MaterialDialog dialog) {
-
-                       for (int i = 0; i < ids.size(); i++) {
-
-
-                           if (ids.valueAt(i)) {
-
-
-
+                   public void onClick(DialogInterface dialogInterface, int i) {
+                       for (int a = 0; i < ids.size(); i++) {
+                           if (ids.valueAt(a)) {
                                File file = LibraryController.getFileList().get(ids.keyAt(i));
 
                                LibraryController.deleteFiles(file);
 
                                Log.i("Delete", "Deleting " + file.getName());
-
-
-
                            }
                        }
-                      hideActionBar();
+                       hideActionBar();
                        mContext.refreshFiles();
                    }
                })
-               .negativeText(R.string.cancel)
-               .negativeColorRes(R.color.body_text_2)
-               .show();
-
+               .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                   @Override
+                   public void onClick(DialogInterface dialogInterface, int i) {
+                       hideActionBar();
+                   }
+               });
     }
 }
