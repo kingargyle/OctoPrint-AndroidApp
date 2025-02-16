@@ -6,7 +6,7 @@
        Base application theme, dependent on API level. This theme is replaced
        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
    -->
-    <style name="AppBaseTheme.Green" parent="Theme.AppCompat.Light">
+    <style name="AppBaseTheme.Green" parent="Theme.MaterialComponents.DayNight">
         <item name="android:windowBackground">@color/pager_background</item>
         <item name="android:windowContentOverlay">@android:color/transparent</item>
         <!-- Action bar -->
